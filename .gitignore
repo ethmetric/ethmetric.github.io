@@ -1,0 +1,8 @@
+intermediate_data/
+chart_data/
+config.local.ini
+__pycache__/
+local/
+test.txt
+process/run.sh
+process/source_data/price/
