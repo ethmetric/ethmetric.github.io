@@ -6,3 +6,5 @@ local/
 test.txt
 process/run.sh
 process/source_data/price/
+*.zip
+temp/

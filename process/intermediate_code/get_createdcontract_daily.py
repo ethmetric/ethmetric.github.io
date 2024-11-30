@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from util import datadir,sort_by_blocknum,to_int,to_str
+from util import datadir,sort_by_blocknum,to_int,to_str,date_to_last_block,begin_end,date_to_day_time
 import glob
 import functools
 
@@ -14,13 +14,30 @@ except:
 ContractInfoCsvs = glob.glob(datadir+"*ContractInfo.csv")
 ContractInfoCsvs.sort(key=functools.cmp_to_key(sort_by_blocknum))
 
+last_write_daytime = 0
+
+only_update = False
+files = os.listdir(output_dir)
+files.sort()
+only_update = len(files) > 0
+
+if only_update:
+    last_date = files[-1].split(".")[0]
+    last_write_daytime = date_to_day_time(last_date) + 86400
+    last_block = date_to_last_block(last_date)
+    print("only update from", last_block)
+    t = []
+    for file in ContractInfoCsvs:
+        begin, end = begin_end(file)
+        if end > last_block:
+            t.append(file)
+    ContractInfoCsvs = t
+
 print(datadir, ContractInfoCsvs)
 
-last_write_daytime = 0
 contracts = []
 
 import time
-start = time.time()
 
 for file in ContractInfoCsvs:
     theCSV = open(file)
@@ -29,6 +46,12 @@ for file in ContractInfoCsvs:
     oneLine = theCSV.readline().strip()
     while oneLine!="":
         oneArray = oneLine.split(",")
+        oneLine = theCSV.readline().strip()
+
+        if only_update:
+            createdBlockNumber = int(oneArray[1])
+            if createdBlockNumber <= last_block:
+                continue
 
         # address,createdBlockNumber,createdTimestamp,createdTransactionHash,creator,creatorIsContract,createValue,creationCode,contractCode
         address = oneArray[0]
@@ -42,10 +65,9 @@ for file in ContractInfoCsvs:
             with open(output_dir + str(day) + ".txt", "w") as f:
                 for i in contracts:
                     f.write(i+"\n")
-                contracts = []
+            contracts = []
         
         contracts.append(address)
 
-        oneLine = theCSV.readline().strip()
 
     theCSV.close()

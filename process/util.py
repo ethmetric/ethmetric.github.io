@@ -1,5 +1,9 @@
 import configparser
 import os
+import glob
+import functools
+import time
+import calendar
 
 config = configparser.ConfigParser()
 
@@ -32,6 +36,39 @@ def to_int(str):
 def to_str(str):
     return None if str=="None" else str
 
+def date_to_day_time(date_str):
+    target_time_tuple = time.strptime(date_str, "%Y-%m-%d")
+    target_timestamp = calendar.timegm(target_time_tuple)
+    return target_timestamp
+
+def date_to_last_block(date_str):
+    target_timestamp = date_to_day_time(date_str)
+
+    BlockInfoCsvs = glob.glob(datadir+"*Block_Info.csv")
+    BlockInfoCsvs.sort(key=functools.cmp_to_key(sort_by_blocknum))
+    ret = 0
+
+    for file in reversed(BlockInfoCsvs):
+        blockInfoCsv = open(file)
+        print("reading", file)
+        head = blockInfoCsv.readline().strip()
+        blockInfoLine = blockInfoCsv.readline().strip()
+        while blockInfoLine != "":
+            blockInfoArr = blockInfoLine.split(",")
+            blocknum = int(blockInfoArr[0])
+            timestamp = int(blockInfoArr[1])
+            if timestamp > target_timestamp + 86400:
+                if ret > 0:
+                    return ret
+                else:
+                    break
+            else:
+                ret = blocknum
+                blockInfoLine = blockInfoCsv.readline().strip()
+
+def begin_end(filename):
+    arr = filename.split("/")[-1].split("_")[0].split("to")
+    return int(arr[0]), int(arr[1])
 
 dao_hardfork_beneficiary = "0xbf4ed7b27f1d666546e30d74d50d173d20bca754"
 dao_hardfork_accounts = [
