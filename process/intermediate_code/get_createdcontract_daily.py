@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from util import datadir,sort_by_blocknum,to_int,to_str,date_to_last_block,begin_end,date_to_day_time
+from util import datadir,sort_by_blocknum,to_int,to_str,date_to_last_block,begin_end,date_to_day_time,prune_files
 import glob
 import functools
 
@@ -26,12 +26,7 @@ if only_update:
     last_write_daytime = date_to_day_time(last_date) + 86400
     last_block = date_to_last_block(last_date)
     print("only update from", last_block)
-    t = []
-    for file in ContractInfoCsvs:
-        begin, end = begin_end(file)
-        if end > last_block:
-            t.append(file)
-    ContractInfoCsvs = t
+    ContractInfoCsvs = prune_files(ContractInfoCsvs, last_block)
 
 print(datadir, ContractInfoCsvs)
 

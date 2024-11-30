@@ -1,9 +1,10 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from util import datadir,sort_by_blocknum,to_int,to_str, dao_hardfork_beneficiary, dao_hardfork_accounts
+from util import datadir,sort_by_blocknum,to_int,to_str, dao_hardfork_beneficiary, dao_hardfork_accounts, date_to_day_time, date_to_last_block, begin_end, prune_files, read_first_line_gt_block
 import glob
 import functools
+import time
 
 output_dir = "intermediate_data/balanceupdate_daily/"
 try:
@@ -24,21 +25,45 @@ MinerRewardCsvs.sort(key=functools.cmp_to_key(sort_by_blocknum))
 WithdrawalCsvs = glob.glob(datadir+"*Withdrawal.csv")
 WithdrawalCsvs.sort(key=functools.cmp_to_key(sort_by_blocknum))
 
-print(datadir, BlockTransactionCsvs, IneternalTransactionCsvs)
-
 last_write_daytime = 0
 balance_of = {}
 balanceupdate_of = {}
-genesis_lines = open("source_data/genesis.csv").read().split("\n")
-for line in genesis_lines[:-1]:
-    t = line.split(",")
-    addr = t[0]
-    balance = int(t[1])
-    balance_of[addr] = balance
-    balanceupdate_of[addr] = balance
 
-import time
-start = time.time()
+only_update = False
+files = os.listdir(output_dir)
+files.sort()
+only_update = len(files) > 0
+
+if only_update:
+    last_date = files[-1].split(".")[0]
+    last_write_daytime = date_to_day_time(last_date) + 86400
+    last_block = date_to_last_block(last_date)
+    print("only update from", last_block)
+    BlockTransactionCsvs = prune_files(BlockTransactionCsvs, last_block)
+    IneternalTransactionCsvs = prune_files(IneternalTransactionCsvs, last_block)
+    MinerRewardCsvs = prune_files(MinerRewardCsvs, last_block)
+    WithdrawalCsvs = prune_files(WithdrawalCsvs, last_block)
+
+    balanceupdate_daily_files = glob.glob("intermediate_data/balanceupdate_daily/*")
+    balanceupdate_daily_files.sort()
+    balanceupdate_daily_files.reverse()
+    for file in balanceupdate_daily_files:
+        lines = open(file).read().split("\n")[:-1]
+        print("read", file, "update", len(lines), len(balance_of))
+        for line in lines:
+            arr = line.strip().split(",")
+            if arr[0] not in balance_of:
+                balance_of[arr[0]] = int(arr[1])
+
+else:
+    genesis_lines = open("source_data/genesis.csv").read().split("\n")
+    for line in genesis_lines[:-1]:
+        t = line.split(",")
+        addr = t[0]
+        balance = int(t[1])
+        balance_of[addr] = balance
+        balanceupdate_of[addr] = balance
+
 
 def block_number(line):
     number = int(line.split(",")[0])
@@ -85,10 +110,16 @@ for file in BlockTransactionCsvs:
     head3 = blockInfoCsv.readline()
     head4 = rewardCSV.readline()
 
-    blockTxLine = blockTxCSV.readline().strip()    
-    interTxLine = interTxCSV.readline().strip()
-    blockInfoLine = blockInfoCsv.readline().strip()
-    rewardLine = rewardCSV.readline().strip()
+    if only_update:
+        blockInfoLine = read_first_line_gt_block(blockInfoCsv, last_block)
+        blockTxLine = read_first_line_gt_block(blockTxCSV, last_block)
+        interTxLine = read_first_line_gt_block(interTxCSV, last_block)
+        rewardLine = read_first_line_gt_block(rewardCSV, last_block)
+    else:
+        blockTxLine = blockTxCSV.readline().strip()    
+        interTxLine = interTxCSV.readline().strip()
+        blockInfoLine = blockInfoCsv.readline().strip()
+        rewardLine = rewardCSV.readline().strip()
 
     current_blocknum = 0
     current_miner = ""

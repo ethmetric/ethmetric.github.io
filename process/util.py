@@ -70,6 +70,23 @@ def begin_end(filename):
     arr = filename.split("/")[-1].split("_")[0].split("to")
     return int(arr[0]), int(arr[1])
 
+def prune_files(files, last_block):
+    t = []
+    for file in files:
+        begin, end = begin_end(file)
+        if end > last_block:
+            t.append(file)
+    return t
+
+def read_first_line_gt_block(f, last_block):
+    one_line = f.readline().strip()
+    while one_line != "":
+        blocknum =  int(one_line.split(",")[0])
+        if blocknum > last_block:
+            return one_line
+        one_line = f.readline().strip()
+
+
 dao_hardfork_beneficiary = "0xbf4ed7b27f1d666546e30d74d50d173d20bca754"
 dao_hardfork_accounts = [
     "0xd4fe7bc31cedb7bfb8a345f31e668033056b2728",
