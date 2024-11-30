@@ -142,6 +142,7 @@ for file in BlockTransactionCsvs:
             else:
                 transfer(tx_sender, tx_toCreate, tx_value)
 
+        suicided_contracts = set()
 
         # Seond step: read the internal TX
         while interTxLine != "" and internal_tx_hash(interTxLine) == transactionHash:
@@ -153,7 +154,13 @@ for file in BlockTransactionCsvs:
             isError = interTxArray[10]
             if isError == "None" and msg_value>0 and (call_type=="call" or call_type=="suicide" or call_type=="create"):
                 transfer(msg_sender, msg_to, msg_value)
+            if isError == "None" and call_type=="suicide" and blockNumber < 19426587: # before dencun
+                suicided_contracts.add(msg_sender)
             interTxLine = interTxCSV.readline().strip()    
+
+        for addr in suicided_contracts:
+            if addr in balance_of:
+                sub(addr, balance_of[addr])
 
         # Third step: calc the TX fee
         gasPrice              = int(blockTxArray[10])
