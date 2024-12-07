@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EthMetric | Measuring Ethereum</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <script type="text/javascript" src="https://registry.npmmirror.com/echarts/5.5.1/files/dist/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <style>
+      .chart {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        aspect-ratio: 4 / 3;
+      }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">EthMetric</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Overview</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Staking</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Blobs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link">Holders</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <div class="row">
+          <div class="col-12 col-md-4 mt-1">
+              <div class="chart" id="container"></div>
+          </div>
+          <div class="col-12 col-md-4 mt-1">
+              <div class="chart" id="container2"></div>
+          </div>
+          <div class="col-12 col-md-4 mt-1">
+              <div class="chart" id="container3"></div>
+          </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript">
+      
+    var dom = document.getElementById('container');
+    var myChart = echarts.init(dom, null, {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
+    var option = {
+      graphic: {
+        elements: [
+          {
+            type: 'text',
+            left: 'center',
+            top: 'center',
+            style: {
+              text: 'ethmetric',
+              fontSize: 50,
+              fontWeight: 'bold',
+              fill: 'rgba(0, 0, 0, 0.1)'
+            }
+          }
+        ]
+      },
+      legend: {
+        data: ['Deposit', 'Withdrawl'],
+        top: '10%',
+      },
+      tooltip: {
+        trigger: 'axis',
+        position: function (pt) {
+          return [pt[0], '10%'];
+        }
+      },
+      title: {
+        left: 'center',
+        text: 'Beacon Deposit and Withdrawl',
+      },
+      toolbox: {
+        feature: {
+          saveAsImage: {}
+        }
+      },
+      xAxis: {
+        type: 'time',
+        boundaryGap: false
+      },
+      yAxis: [{
+        type: 'value',
+        max: 6e7,
+        boundaryGap: [0, '100%'],
+        position: 'left',
+        axisLabel: {
+          formatter: function (value) {
+            return value.toExponential();
+          }
+        }
+      },{
+        type: 'value',
+        max: 3e7,
+        boundaryGap: [0, '100%'],
+        axisLabel: {
+          formatter: function (value) {
+            return value.toExponential();
+          }
+        },
+        position: 'right'
+      }],
+      dataZoom: [
+        {
+          type: 'inside',
+          start: 0,
+          end: 100
+        },
+        {
+          start: 0,
+          end: 100
+        }
+      ],
+      series: [
+        {
+          name: 'Deposit',
+          type: 'line',
+          symbol: 'none',
+          areaStyle: {},
+          data: [],
+          yAxisIndex: 0
+        },
+        {
+          name: 'Withdrawl',
+          type: 'line',
+          symbol: 'none',
+          areaStyle: {},
+          data: [],
+          yAxisIndex: 1
+        }
+      ]
+    };
+
+
+
+    var dom2 = document.getElementById('container2');
+    var myChart2 = echarts.init(dom2, null, {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
+    var option2 = {
+      graphic: {
+        elements: [
+          {
+            type: 'text',
+            left: 'center',
+            top: 'center',
+            style: {
+              text: 'ethmetric',
+              fontSize: 50,
+              fontWeight: 'bold',
+              fill: 'rgba(0, 0, 0, 0.1)'
+            }
+          }
+        ]
+      },
+      legend: {
+        data: ['Deposit-Withdrawl'],
+        top: '10%',
+      },
+      tooltip: {
+        trigger: 'axis',
+        position: function (pt) {
+          return [pt[0], '10%'];
+        }
+      },
+      
+      title: {
+        left: 'center',
+        text: 'Beacon Staking',
+      },
+      toolbox: {
+        feature: {
+          saveAsImage: {}
+        }
+      },
+      xAxis: {
+        type: 'time',
+        boundaryGap: false
+      },
+      yAxis: {
+        min: 0,
+        max: 4e7,
+        type: 'value',
+        boundaryGap: [0, '100%'],
+        axisLabel: {
+          formatter: function (value) {
+            return value.toExponential();
+          }
+        }
+      },
+      dataZoom: [
+        {
+          type: 'inside',
+          start: 0,
+          end: 100
+        },
+        {
+          start: 0,
+          end: 100
+        }
+      ],
+      series: [
+        {
+          name: 'Deposit-Withdrawl',
+          type: 'line',
+          symbol: 'none',
+          areaStyle: {},
+          data: [],
+        }
+      ]
+    };
+
+
+
+    var dom3 = document.getElementById('container3');
+    var myChart3 = echarts.init(dom3, null, {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
+    var option3 = {
+      graphic: {
+        elements: [
+          {
+            type: 'text',
+            left: 'center',
+            top: 'center',
+            style: {
+              text: 'ethmetric',
+              fontSize: 50,
+              fontWeight: 'bold',
+              fill: 'rgba(0, 0, 0, 0.1)'
+            }
+          }
+        ]
+      },
+      legend: {
+        data: ['Deposit-Withdrawl'],
+        top: '10%',
+      },
+      tooltip: {
+        trigger: 'axis',
+        position: function (pt) {
+          return [pt[0], '10%'];
+        }
+      },
+      title: {
+        left: 'center',
+        text: 'Beacon Staking Changes',
+      },
+      toolbox: {
+        feature: {
+          saveAsImage: {}
+        }
+      },
+      xAxis: {
+        type: 'time',
+        boundaryGap: false
+      },
+      yAxis: {
+        min: -4e5,
+        max: 4e5,
+        type: 'value',
+        boundaryGap: [0, '100%'],
+        axisLabel: {
+          formatter: function (value) {
+            return value.toExponential();
+          }
+        },
+      },
+      dataZoom: [
+      {
+        type: 'inside',
+        start: 0,
+        end: 100
+      },
+      {
+        start: 0,
+        end: 100
+      }
+      ],
+      series: [
+      {
+        name: 'Deposit-Withdrawl',
+        type: 'bar',
+        symbol: 'none',
+        itemStyle: {
+        color: function (params) {
+          return params.value[1] >= 0 ? 'green' : 'red';
+        }
+        },
+        data: [],
+      }
+      ]
+    }
+
+    function get_beacon_deposit(callback) {
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', 'process/chart_data/beacon_deposit.txt', true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          lines = xhr.responseText.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].split(',');
+            option.series[0].data.push([line[0], Math.floor(line[1])]);
+          }
+          callback();
+        }
+      };
+      xhr.send();
+    }
+
+
+    function get_beacon_withdrawl(callback) {
+      let xhr2 = new XMLHttpRequest();
+      xhr2.open('GET', 'process/chart_data/beacon_withdrawl.txt', true);
+      xhr2.onreadystatechange = function () {
+        if (xhr2.readyState == 4 && xhr2.status == 200) {
+          lines = xhr2.responseText.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].split(',');
+            option.series[1].data.push([line[0], Math.floor(line[1])]);
+          }
+          callback();
+        }
+      };
+      xhr2.send();
+    }
+
+
+    function get_ethprice(callback) {
+      let xhr3 = new XMLHttpRequest();
+      xhr3.open('GET', 'process/chart_data/ethprice.txt', true);
+      xhr3.onreadystatechange = function () {
+        if (xhr3.readyState == 4 && xhr3.status == 200) {
+          lines = xhr3.responseText.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].split(',');
+            option.series[1].data.push([line[0], Math.floor(line[1])]);
+          }
+          callback();
+        }
+      };
+      xhr3.send();
+    }
+
+
+    get_beacon_deposit(function () {
+      get_beacon_withdrawl(function () {
+
+        let withdrawls_length = option.series[1].data.length;
+        let only_deposit_length = option.series[0].data.length - withdrawls_length;
+
+        console.log("???", only_deposit_length, withdrawls_length);
+
+        for (let i = 0; i < only_deposit_length; i++) {
+          option2.series[0].data.push(option.series[0].data[i]);
+          console.log(option2.series[0].data);
+        }
+
+        for (let i=0; i < withdrawls_length; i++) {
+          let j = only_deposit_length + i;
+          option2.series[0].data.push([option.series[1].data[i][0], option.series[0].data[j][1] - option.series[1].data[i][1]]);
+          console.log(option2.series[0].data);
+        }
+
+        for (let i=1; i<option2.series[0].data.length; i++) {
+          option3.series[0].data.push([option2.series[0].data[i][0], option2.series[0].data[i][1] - option2.series[0].data[i-1][1]]);
+        }
+
+        myChart.setOption(option);
+        myChart2.setOption(option2);
+        myChart3.setOption(option3);
+
+      });
+    });
+
+
+    window.addEventListener('resize', myChart.resize);
+    window.addEventListener('resize', myChart2.resize);
+    window.addEventListener('resize', myChart3.resize);
+    </script>
+</body>
+</html>

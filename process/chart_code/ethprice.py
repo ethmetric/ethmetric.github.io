@@ -2,9 +2,7 @@ import glob
 import json
 import time
 
-files = glob.glob("source_data/price/*")
-files.sort()
-
+file = "source_data/price/rawprice.txt"
 
 f = open("chart_data/ethprice.txt", "w")
 
@@ -26,13 +24,12 @@ f = open("chart_data/ethprice.txt", "w")
   ]
 ]
 """
-for file in files:
-    print("read", file)
-    arr = json.loads(open(file).read())
-    for i in arr:
-        timestamp = int(i[0])/1000
-        price = i[4]
-        day = time.strftime('%Y-%m-%d', time.gmtime(timestamp))
-        f.write(day+","+price+"\n")
+print("read", file)
+arr = json.loads(open(file).read())
+for i in arr[:-1]:
+  timestamp = int(i[0])/1000
+  price = i[4]
+  day = time.strftime('%Y-%m-%d', time.gmtime(timestamp))
+  f.write(day+","+price+"\n")
 
 f.close()

@@ -8,3 +8,5 @@ process/run.sh
 process/source_data/price/
 *.zip
 temp/
+website_debug.sh
+t.html

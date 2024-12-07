@@ -1,10 +1,10 @@
 import glob
 
 
-balanceupdate_daily_files = glob.glob("intermediate_data/balanceupdate_daily/*")
+holding100eth_daily_files = glob.glob("intermediate_data/holding100eth_daily/*")
 createdcontract_daily_files = glob.glob("intermediate_data/createdcontract_daily/*")
 
-balanceupdate_daily_files.sort()
+holding100eth_daily_files.sort()
 createdcontract_daily_files.sort()
 
 
@@ -24,25 +24,17 @@ value = 100 * (10**18)
 
 f = open("chart_data/eoacnt_100eth.txt", "w")
 
-for file in balanceupdate_daily_files:
+for file in holding100eth_daily_files:
     print("read", file)
     lines = open(file).read().split("\n")[:-1]
+    cnt = 0 
     for line in lines:
         arr = line.strip().split(",")
         addr = arr[0]
-        balance = int(arr[1])
         if addr not in contracts:
-            if balance >= value:
-                eoacnt_100eth.add(addr)
-            else:
-                if addr in eoacnt_100eth:
-                    eoacnt_100eth.remove(addr)
+            cnt += 1
 
     day = file.split("/")[-1].split(".")[0]
-    f.write(day+","+str(len(eoacnt_100eth))+"\n")
+    f.write(day+","+str(cnt)+"\n")
 
 f.close()
-
-with open("intermediate_data/eoacnt_100eth.txt", "w") as f:
-    for i in eoacnt_100eth:
-        f.write(i+"\n")
