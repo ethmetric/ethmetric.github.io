@@ -379,6 +379,189 @@
       ]
     }
 
+
+
+
+    
+    var dom4 = document.getElementById('container4');
+    var myChart4 = echarts.init(dom4, null, {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
+    var option4 = {
+      graphic: {
+        elements: [
+          {
+            type: 'text',
+            left: 'center',
+            top: 'center',
+            style: {
+              text: 'ethmetric',
+              fontSize: 50,
+              fontWeight: 'bold',
+              fill: 'rgba(0, 0, 0, 0.1)'
+            }
+          }
+        ]
+      },
+      legend: {
+        data: ['BlobCountPerBlock', 'ETH_Price'],
+        top: '10%',
+        selected: {
+          'ETH_Price': false
+        }
+      },
+      tooltip: {
+        trigger: 'axis',
+        position: function (pt) {
+          return [pt[0], '10%'];
+        }
+      },
+      
+      title: {
+        left: 'center',
+        text: 'Blob Count Per Block',
+      },
+      toolbox: {
+        feature: {
+          saveAsImage: {}
+        }
+      },
+      xAxis: {
+        type: 'time',
+        boundaryGap: false
+      },
+      yAxis: [{
+        type: 'value',
+        boundaryGap: [0, '100%']
+      },{
+        type: 'value',
+        max: 5e3,
+        boundaryGap: [0, '100%'],
+        position: 'right'
+      }],
+      dataZoom: [
+        {
+          type: 'inside',
+          start: 0,
+          end: 100
+        },
+        {
+          start: 0,
+          end: 100
+        }
+      ],
+      series: [
+        {
+          name: 'BlobCountPerBlock',
+          type: 'line',
+          symbol: 'none',
+          areaStyle: {},
+          data: [],
+        },
+        {
+          name: 'ETH_Price',
+          type: 'line',
+          symbol: 'none',
+          data: [],
+          yAxisIndex: 1,
+          color: '#bbbbbb'
+        }
+      ]
+    };
+
+
+
+    
+    var dom5 = document.getElementById('container5');
+    var myChart5 = echarts.init(dom5, null, {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
+    var option5 = {
+      graphic: {
+        elements: [
+          {
+            type: 'text',
+            left: 'center',
+            top: 'center',
+            style: {
+              text: 'ethmetric',
+              fontSize: 50,
+              fontWeight: 'bold',
+              fill: 'rgba(0, 0, 0, 0.1)'
+            }
+          }
+        ]
+      },
+      legend: {
+        data: ['BlobFees', 'ETH_Price'],
+        top: '10%',
+        selected: {
+          'ETH_Price': false
+        }
+      },
+      tooltip: {
+        trigger: 'axis',
+        position: function (pt) {
+          return [pt[0], '10%'];
+        }
+      },
+      
+      title: {
+        left: 'center',
+        text: 'Blob Fees',
+      },
+      toolbox: {
+        feature: {
+          saveAsImage: {}
+        }
+      },
+      xAxis: {
+        type: 'time',
+        boundaryGap: false
+      },
+      yAxis: [{
+        type: 'value',
+        boundaryGap: [0, '100%'],
+      },{
+        type: 'value',
+        max: 5e3,
+        boundaryGap: [0, '100%'],
+        position: 'right'
+      }],
+      dataZoom: [
+        {
+          type: 'inside',
+          start: 0,
+          end: 100
+        },
+        {
+          start: 0,
+          end: 100
+        }
+      ],
+      series: [
+        {
+          name: 'BlobFees',
+          type: 'line',
+          symbol: 'none',
+          areaStyle: {},
+          data: [],
+        },
+        {
+          name: 'ETH_Price',
+          type: 'line',
+          symbol: 'none',
+          data: [],
+          yAxisIndex: 1,
+          color: '#bbbbbb'
+        }
+      ]
+    };
+
+    
+
     function get_beacon_deposit(callback) {
       let xhr = new XMLHttpRequest();
       xhr.open('GET', 'process/chart_data/beacon_deposit.txt', true);
@@ -397,11 +580,11 @@
 
 
     function get_beacon_withdrawl(callback) {
-      let xhr2 = new XMLHttpRequest();
-      xhr2.open('GET', 'process/chart_data/beacon_withdrawl.txt', true);
-      xhr2.onreadystatechange = function () {
-        if (xhr2.readyState == 4 && xhr2.status == 200) {
-          lines = xhr2.responseText.split('\n');
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', 'process/chart_data/beacon_withdrawl.txt', true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          lines = xhr.responseText.split('\n');
           for (let i = 0; i < lines.length; i++) {
             let line = lines[i].split(',');
             option.series[1].data.push([line[0], Math.floor(line[1])]);
@@ -409,17 +592,17 @@
           callback();
         }
       };
-      xhr2.send();
+      xhr.send();
     }
 
 
     var ethprices = [];
     function get_ethprice(callback) {
-      let xhr3 = new XMLHttpRequest();
-      xhr3.open('GET', 'process/chart_data/ethprice.txt', true);
-      xhr3.onreadystatechange = function () {
-        if (xhr3.readyState == 4 && xhr3.status == 200) {
-          lines = xhr3.responseText.split('\n');
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', 'process/chart_data/ethprice.txt', true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          lines = xhr.responseText.split('\n');
           for (let i = 0; i < lines.length; i++) {
             let line = lines[i].split(',');
             ethprices.push([line[0], Math.floor(line[1])]);
@@ -427,13 +610,46 @@
           callback();
         }
       };
-      xhr3.send();
+      xhr.send();
+    }
+
+    function get_blob_cnt_per_block(callback) {
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', 'process/chart_data/blob_cnt_per_block.txt', true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          lines = xhr.responseText.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].split(',');
+            option4.series[0].data.push([line[0], parseFloat(line[1])]);
+          }
+          callback();
+        }
+      };
+      xhr.send();
     }
 
 
-    get_beacon_deposit(function () {
-      get_beacon_withdrawl(function () {
-        get_ethprice(function () {
+    function get_blob_fees(callback) {
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', 'process/chart_data/blob_fees.txt', true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          lines = xhr.responseText.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].split(',');
+            option5.series[0].data.push([line[0], parseFloat(line[1])]);
+          }
+          callback();
+        }
+      };
+      xhr.send();
+    }
+
+
+    get_ethprice(function () {
+      get_beacon_deposit(function () {
+        get_beacon_withdrawl(function () {
           let withdrawls_length = option.series[1].data.length;
           let only_deposit_length = option.series[0].data.length - withdrawls_length;
 
@@ -466,8 +682,23 @@
           myChart3.setOption(option3);
 
         });
-
       });
+
+      get_blob_cnt_per_block(function (){
+        get_blob_fees(function () {
+          for (let i in ethprices) {
+            let begin = option4.series[0].data[0][0];
+            let end = option4.series[0].data[option4.series[0].data.length - 2][0];
+            if (ethprices[i][0] >= begin && ethprices[i][0] <= end) {
+              option4.series[1].data.push(ethprices[i]);
+              option5.series[1].data.push(ethprices[i]);
+            }
+          }
+          myChart4.setOption(option4);
+          myChart5.setOption(option5);
+        });
+      })
+
     });
 
     document.getElementById("showethprice").addEventListener("change", function() {
@@ -475,19 +706,27 @@
         option.legend.selected['ETH_Price'] = true;
         option2.legend.selected['ETH_Price'] = true;
         option3.legend.selected['ETH_Price'] = true;
+        option4.legend.selected['ETH_Price'] = true;
+        option5.legend.selected['ETH_Price'] = true;
       } else {
         option.legend.selected['ETH_Price'] = false;
         option2.legend.selected['ETH_Price'] = false;
         option3.legend.selected['ETH_Price'] = false;
+        option4.legend.selected['ETH_Price'] = false;
+        option5.legend.selected['ETH_Price'] = false;
       }
       myChart.setOption(option);
       myChart2.setOption(option2);
       myChart3.setOption(option3);
+      myChart4.setOption(option4);
+      myChart5.setOption(option5);
     });
 
     window.addEventListener('resize', myChart.resize);
     window.addEventListener('resize', myChart2.resize);
     window.addEventListener('resize', myChart3.resize);
+    window.addEventListener('resize', myChart4.resize);
+    window.addEventListener('resize', myChart5.resize);
     </script>
 </body>
 </html>
