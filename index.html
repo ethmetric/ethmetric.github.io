@@ -495,7 +495,7 @@
         ]
       },
       legend: {
-        data: ['BlobFees', 'ETH_Price'],
+        data: ['BlobBurntFees', 'ETH_Price'],
         top: '10%',
         selected: {
           'ETH_Price': false
@@ -510,7 +510,7 @@
       
       title: {
         left: 'center',
-        text: 'Blob Fees',
+        text: 'Blob Burnt Fees',
       },
       toolbox: {
         feature: {
@@ -543,7 +543,7 @@
       ],
       series: [
         {
-          name: 'BlobFees',
+          name: 'BlobBurntFees',
           type: 'line',
           symbol: 'none',
           areaStyle: {},
@@ -560,7 +560,109 @@
       ]
     };
 
-    
+      
+    var dom6 = document.getElementById('container6');
+    var myChart6 = echarts.init(dom6, null, {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
+    var option6 = {
+      graphic: {
+        elements: [
+          {
+            type: 'text',
+            left: 'center',
+            top: 'center',
+            style: {
+              text: 'ethmetric',
+              fontSize: 50,
+              fontWeight: 'bold',
+              fill: 'rgba(0, 0, 0, 0.1)'
+            }
+          }
+        ]
+      },
+      legend: {
+        data: ['TotalBurnt', 'BlobBurnt', 'ETH_Price'],
+        top: '10%',
+        selected: {
+          'ETH_Price': false
+        }
+      },
+      tooltip: {
+        trigger: 'axis',
+        position: function (pt) {
+          return [pt[0], '10%'];
+        }
+      },
+      title: {
+        left: 'center',
+        text: 'Total Burnt v.s. Blob Burnt',
+      },
+      toolbox: {
+        feature: {
+          saveAsImage: {}
+        }
+      },
+      xAxis: {
+        type: 'time',
+        boundaryGap: false
+      },
+      yAxis: [{
+        type: 'value',
+        boundaryGap: [0,  0],
+        position: 'left',
+        axisLabel: {
+          formatter: function (value) {
+            return value.toExponential();
+          }
+        }
+      },{
+        type: 'value',
+        max: 5e3,
+        boundaryGap: [0, '100%'],
+        position: 'right'
+      }],
+      dataZoom: [
+        {
+          type: 'inside',
+          start: 0,
+          end: 100
+        },
+        {
+          start: 0,
+          end: 100
+        }
+      ],
+      series: [
+        {
+          name: 'TotalBurnt',
+          type: 'line',
+          symbol: 'none',
+          areaStyle: {},
+          data: [],
+          yAxisIndex: 0
+        },
+        {
+          name: 'BlobBurnt',
+          type: 'line',
+          symbol: 'none',
+          areaStyle: {},
+          data: [],
+          yAxisIndex: 0
+        },
+        {
+          name: 'ETH_Price',
+          type: 'line',
+          symbol: 'none',
+          data: [],
+          yAxisIndex: 1,
+          color: '#bbbbbb'
+        }
+      ]
+    };
+
+
 
     function get_beacon_deposit(callback) {
       let xhr = new XMLHttpRequest();
@@ -630,15 +732,32 @@
     }
 
 
-    function get_blob_fees(callback) {
+    function get_blob_burnt_fees(callback) {
       let xhr = new XMLHttpRequest();
-      xhr.open('GET', 'process/chart_data/blob_fees.txt', true);
+      xhr.open('GET', 'process/chart_data/blob_burnt_fees.txt', true);
       xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
           lines = xhr.responseText.split('\n');
           for (let i = 0; i < lines.length; i++) {
             let line = lines[i].split(',');
             option5.series[0].data.push([line[0], parseFloat(line[1])]);
+            option6.series[1].data.push([line[0], parseFloat(line[1])]);
+          }
+          callback();
+        }
+      };
+      xhr.send();
+    }
+
+    function get_total_burnt_fees(callback) {
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', 'process/chart_data/total_burnt_fees.txt', true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          lines = xhr.responseText.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].split(',');
+            option6.series[0].data.push([line[0], parseFloat(line[1])]);
           }
           callback();
         }
@@ -684,8 +803,8 @@
         });
       });
 
-      get_blob_cnt_per_block(function (){
-        get_blob_fees(function () {
+      get_blob_burnt_fees(function () {
+        get_blob_cnt_per_block(function (){
           for (let i in ethprices) {
             let begin = option4.series[0].data[0][0];
             let end = option4.series[0].data[option4.series[0].data.length - 2][0];
@@ -696,6 +815,17 @@
           }
           myChart4.setOption(option4);
           myChart5.setOption(option5);
+        });
+
+        get_total_burnt_fees(function() {
+          for (let i in ethprices) {
+            let begin = option6.series[0].data[0][0];
+            let end = option6.series[0].data[option6.series[0].data.length - 2][0];
+            if (ethprices[i][0] >= begin && ethprices[i][0] <= end) {
+              option6.series[2].data.push(ethprices[i]);
+            }
+          }
+          myChart6.setOption(option6);
         });
       })
 
@@ -708,18 +838,21 @@
         option3.legend.selected['ETH_Price'] = true;
         option4.legend.selected['ETH_Price'] = true;
         option5.legend.selected['ETH_Price'] = true;
+        option6.legend.selected['ETH_Price'] = true;
       } else {
         option.legend.selected['ETH_Price'] = false;
         option2.legend.selected['ETH_Price'] = false;
         option3.legend.selected['ETH_Price'] = false;
         option4.legend.selected['ETH_Price'] = false;
         option5.legend.selected['ETH_Price'] = false;
+        option6.legend.selected['ETH_Price'] = false;
       }
       myChart.setOption(option);
       myChart2.setOption(option2);
       myChart3.setOption(option3);
       myChart4.setOption(option4);
       myChart5.setOption(option5);
+      myChart6.setOption(option6);
     });
 
     window.addEventListener('resize', myChart.resize);
@@ -727,6 +860,7 @@
     window.addEventListener('resize', myChart3.resize);
     window.addEventListener('resize', myChart4.resize);
     window.addEventListener('resize', myChart5.resize);
+    window.addEventListener('resize', myChart6.resize);
     </script>
 </body>
 </html>

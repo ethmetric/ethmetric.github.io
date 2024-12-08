@@ -1,6 +1,6 @@
 import glob
 
-f = open("chart_data/blob_fees.txt", "w")
+f = open("chart_data/blob_burnt_fees.txt", "w")
 
 blobtx_daily_files = glob.glob("intermediate_data/blobtx_daily/*")
 
