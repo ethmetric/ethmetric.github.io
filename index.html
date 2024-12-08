@@ -9,7 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <style>
       .chart {
-        background-color: #f8f9fa;
+        background-color: #fbfbfb;
         border: 1px solid #dee2e6;
         display: flex;
         align-items: center;
@@ -40,19 +40,43 @@
                         <a class="nav-link">Holders</a>
                     </li>
                 </ul>
+                <div class="ms-auto">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="showethprice">
+                    <label class="form-check-label text-muted" for="showethprice">Show ETH Price</label>
+                  </div>
+                </div>
             </div>
         </div>
     </nav>
     <div class="container mt-4">
         <div class="row">
-          <div class="col-12 col-md-4 mt-1">
+          <div class="col-12 col-md-4 mt-1 mb-3">
               <div class="chart" id="container"></div>
           </div>
-          <div class="col-12 col-md-4 mt-1">
+          <div class="col-12 col-md-4 mt-1 mb-3">
               <div class="chart" id="container2"></div>
           </div>
-          <div class="col-12 col-md-4 mt-1">
+          <div class="col-12 col-md-4 mt-1 mb-3">
               <div class="chart" id="container3"></div>
+          </div>
+          <div class="col-12 col-md-4 mt-1 mb-3">
+              <div class="chart" id="container4"></div>
+          </div>
+          <div class="col-12 col-md-4 mt-1 mb-3">
+              <div class="chart" id="container5"></div>
+          </div>
+          <div class="col-12 col-md-4 mt-1 mb-3">
+              <div class="chart" id="container6"></div>
+          </div>
+          <div class="col-12 col-md-4 mt-1 mb-3">
+              <div class="chart" id="container7"></div>
+          </div>
+          <div class="col-12 col-md-4 mt-1 mb-3">
+              <div class="chart" id="container8"></div>
+          </div>
+          <div class="col-12 col-md-4 mt-1 mb-3">
+              <div class="chart" id="container9"></div>
           </div>
         </div>
     </div>
@@ -81,8 +105,11 @@
         ]
       },
       legend: {
-        data: ['Deposit', 'Withdrawl'],
+        data: ['Deposit', 'Withdrawl', 'ETH_Price'],
         top: '10%',
+        selected: {
+          'ETH_Price': false
+        }
       },
       tooltip: {
         trigger: 'axis',
@@ -115,13 +142,8 @@
         }
       },{
         type: 'value',
-        max: 3e7,
+        max: 5e3,
         boundaryGap: [0, '100%'],
-        axisLabel: {
-          formatter: function (value) {
-            return value.toExponential();
-          }
-        },
         position: 'right'
       }],
       dataZoom: [
@@ -150,7 +172,15 @@
           symbol: 'none',
           areaStyle: {},
           data: [],
-          yAxisIndex: 1
+          yAxisIndex: 0
+        },
+        {
+          name: 'ETH_Price',
+          type: 'line',
+          symbol: 'none',
+          data: [],
+          yAxisIndex: 1,
+          color: '#bbbbbb'
         }
       ]
     };
@@ -179,8 +209,11 @@
         ]
       },
       legend: {
-        data: ['Deposit-Withdrawl'],
+        data: ['Deposit-Withdrawl', 'ETH_Price'],
         top: '10%',
+        selected: {
+          'ETH_Price': false
+        }
       },
       tooltip: {
         trigger: 'axis',
@@ -202,7 +235,7 @@
         type: 'time',
         boundaryGap: false
       },
-      yAxis: {
+      yAxis: [{
         min: 0,
         max: 4e7,
         type: 'value',
@@ -212,7 +245,12 @@
             return value.toExponential();
           }
         }
-      },
+      },{
+        type: 'value',
+        max: 5e3,
+        boundaryGap: [0, '100%'],
+        position: 'right'
+      }],
       dataZoom: [
         {
           type: 'inside',
@@ -231,6 +269,14 @@
           symbol: 'none',
           areaStyle: {},
           data: [],
+        },
+        {
+          name: 'ETH_Price',
+          type: 'line',
+          symbol: 'none',
+          data: [],
+          yAxisIndex: 1,
+          color: '#bbbbbb'
         }
       ]
     };
@@ -259,8 +305,11 @@
         ]
       },
       legend: {
-        data: ['Deposit-Withdrawl'],
+        data: ['Deposit-Withdrawl', 'ETH_Price'],
         top: '10%',
+        selected: {
+          'ETH_Price': false
+        }
       },
       tooltip: {
         trigger: 'axis',
@@ -281,7 +330,7 @@
         type: 'time',
         boundaryGap: false
       },
-      yAxis: {
+      yAxis: [{
         min: -4e5,
         max: 4e5,
         type: 'value',
@@ -291,7 +340,12 @@
             return value.toExponential();
           }
         },
-      },
+      },{
+        type: 'value',
+        max: 5e3,
+        boundaryGap: [0, '100%'],
+        position: 'right'
+      }],
       dataZoom: [
       {
         type: 'inside',
@@ -304,17 +358,24 @@
       }
       ],
       series: [
-      {
-        name: 'Deposit-Withdrawl',
-        type: 'bar',
-        symbol: 'none',
-        itemStyle: {
-        color: function (params) {
-          return params.value[1] >= 0 ? 'green' : 'red';
+        {
+          name: 'Deposit-Withdrawl',
+          type: 'bar',
+          symbol: 'none',
+          itemStyle: {
+          color: function (params) {
+            return params.value[1] >= 0 ? 'green' : 'red';
+          }
+          },
+          data: [],
+        },{
+          name: 'ETH_Price',
+          type: 'line',
+          symbol: 'none',
+          data: [],
+          yAxisIndex: 1,
+          color: '#bbbbbb'
         }
-        },
-        data: [],
-      }
       ]
     }
 
@@ -352,6 +413,7 @@
     }
 
 
+    var ethprices = [];
     function get_ethprice(callback) {
       let xhr3 = new XMLHttpRequest();
       xhr3.open('GET', 'process/chart_data/ethprice.txt', true);
@@ -360,7 +422,7 @@
           lines = xhr3.responseText.split('\n');
           for (let i = 0; i < lines.length; i++) {
             let line = lines[i].split(',');
-            option.series[1].data.push([line[0], Math.floor(line[1])]);
+            ethprices.push([line[0], Math.floor(line[1])]);
           }
           callback();
         }
@@ -371,34 +433,57 @@
 
     get_beacon_deposit(function () {
       get_beacon_withdrawl(function () {
+        get_ethprice(function () {
+          let withdrawls_length = option.series[1].data.length;
+          let only_deposit_length = option.series[0].data.length - withdrawls_length;
 
-        let withdrawls_length = option.series[1].data.length;
-        let only_deposit_length = option.series[0].data.length - withdrawls_length;
+          for (let i = 0; i < only_deposit_length; i++) {
+            option2.series[0].data.push(option.series[0].data[i]);
+          }
 
-        console.log("???", only_deposit_length, withdrawls_length);
+          for (let i=0; i < withdrawls_length; i++) {
+            let j = only_deposit_length + i;
+            option2.series[0].data.push([option.series[1].data[i][0], option.series[0].data[j][1] - option.series[1].data[i][1]]);
+          }
 
-        for (let i = 0; i < only_deposit_length; i++) {
-          option2.series[0].data.push(option.series[0].data[i]);
-          console.log(option2.series[0].data);
-        }
+          for (let i=1; i<option2.series[0].data.length; i++) {
+            option3.series[0].data.push([option2.series[0].data[i][0], option2.series[0].data[i][1] - option2.series[0].data[i-1][1]]);
+          }
 
-        for (let i=0; i < withdrawls_length; i++) {
-          let j = only_deposit_length + i;
-          option2.series[0].data.push([option.series[1].data[i][0], option.series[0].data[j][1] - option.series[1].data[i][1]]);
-          console.log(option2.series[0].data);
-        }
+          console.log(ethprices)
+          console.log(option.series[0].data)
+          for (let i in ethprices) {
+            let begin = option.series[0].data[0][0];
+            let end = option.series[0].data[option.series[0].data.length - 2][0];
+            if (ethprices[i][0] >= begin && ethprices[i][0] <= end) {
+                option.series[2].data.push(ethprices[i]);
+                option2.series[1].data.push(ethprices[i]);
+                option3.series[1].data.push(ethprices[i]);
+              }
+          }
+          myChart.setOption(option);
+          myChart2.setOption(option2);
+          myChart3.setOption(option3);
 
-        for (let i=1; i<option2.series[0].data.length; i++) {
-          option3.series[0].data.push([option2.series[0].data[i][0], option2.series[0].data[i][1] - option2.series[0].data[i-1][1]]);
-        }
-
-        myChart.setOption(option);
-        myChart2.setOption(option2);
-        myChart3.setOption(option3);
+        });
 
       });
     });
 
+    document.getElementById("showethprice").addEventListener("change", function() {
+      if (this.checked) {
+        option.legend.selected['ETH_Price'] = true;
+        option2.legend.selected['ETH_Price'] = true;
+        option3.legend.selected['ETH_Price'] = true;
+      } else {
+        option.legend.selected['ETH_Price'] = false;
+        option2.legend.selected['ETH_Price'] = false;
+        option3.legend.selected['ETH_Price'] = false;
+      }
+      myChart.setOption(option);
+      myChart2.setOption(option2);
+      myChart3.setOption(option3);
+    });
 
     window.addEventListener('resize', myChart.resize);
     window.addEventListener('resize', myChart2.resize);
