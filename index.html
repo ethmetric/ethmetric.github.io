@@ -80,6 +80,15 @@
           </div>
         </div>
     </div>
+
+    <footer class="text-center mt-2" style="border-top: 1px solid #dee2e6; color: #6c757d;">
+      <div class="mt-2 mb-2">
+        <a href="https://github.com/ethmetric/">
+          <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" style="width: 25px; height: 25px; vertical-align: middle;">
+          https://github.com/ethmetric/
+        </a>
+      </div>
+    </footer>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript">
       
@@ -664,6 +673,295 @@
 
 
 
+    var dom7 = document.getElementById('container7');
+    var myChart7 = echarts.init(dom7, null, {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
+    var option7 = {
+      graphic: {
+        elements: [
+          {
+            type: 'text',
+            left: 'center',
+            top: 'center',
+            style: {
+              text: 'ethmetric',
+              fontSize: 50,
+              fontWeight: 'bold',
+              fill: 'rgba(0, 0, 0, 0.1)'
+            }
+          }
+        ]
+      },
+      legend: {
+        data: ['EoaCount_100eth', 'ETH_Price'],
+        top: '10%',
+        selected: {
+          'ETH_Price': false
+        }
+      },
+      tooltip: {
+        trigger: 'axis',
+        position: function (pt) {
+          return [pt[0], '10%'];
+        }
+      },
+      
+      title: {
+        left: 'center',
+        text: 'Count of EOAs with 100 ETH',
+      },
+      toolbox: {
+        feature: {
+          saveAsImage: {}
+        }
+      },
+      xAxis: {
+        type: 'time',
+        boundaryGap: false
+      },
+      yAxis: [{
+        max: 6e4,
+        type: 'value',
+        boundaryGap: [0, '100%'],
+        axisLabel: {
+          formatter: function (value) {
+            return value.toExponential();
+          }
+        }
+      },{
+        type: 'value',
+        max: 5e3,
+        boundaryGap: [0, '100%'],
+        position: 'right'
+      }],
+      dataZoom: [
+        {
+          type: 'inside',
+          start: 0,
+          end: 100
+        },
+        {
+          start: 0,
+          end: 100
+        }
+      ],
+      series: [
+        {
+          name: 'EoaCount_100eth',
+          type: 'line',
+          symbol: 'none',
+          areaStyle: {},
+          data: [],
+        },
+        {
+          name: 'ETH_Price',
+          type: 'line',
+          symbol: 'none',
+          data: [],
+          yAxisIndex: 1,
+          color: '#bbbbbb'
+        }
+      ]
+    };
+
+
+    var dom8 = document.getElementById('container8');
+    var myChart8 = echarts.init(dom8, null, {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
+    var option8 = {
+      graphic: {
+        elements: [
+          {
+            type: 'text',
+            left: 'center',
+            top: 'center',
+            style: {
+              text: 'ethmetric',
+              fontSize: 50,
+              fontWeight: 'bold',
+              fill: 'rgba(0, 0, 0, 0.1)'
+            }
+          }
+        ]
+      },
+      legend: {
+        data: ['EoaSum_100eth', 'ETH_Price'],
+        top: '10%',
+        selected: {
+          'ETH_Price': false
+        }
+      },
+      tooltip: {
+        trigger: 'axis',
+        position: function (pt) {
+          return [pt[0], '10%'];
+        }
+      },
+      
+      title: {
+        left: 'center',
+        text: 'Ether of EOAs with 100 ETH',
+      },
+      toolbox: {
+        feature: {
+          saveAsImage: {}
+        }
+      },
+      xAxis: {
+        type: 'time',
+        boundaryGap: false
+      },
+      yAxis: [{
+        max: 10e7,
+        type: 'value',
+        boundaryGap: [0, '100%'],
+        axisLabel: {
+          formatter: function (value) {
+            return value.toExponential();
+          }
+        }
+      },{
+        type: 'value',
+        max: 5e3,
+        boundaryGap: [0, '100%'],
+        position: 'right'
+      }],
+      dataZoom: [
+        {
+          type: 'inside',
+          start: 0,
+          end: 100
+        },
+        {
+          start: 0,
+          end: 100
+        }
+      ],
+      series: [
+        {
+          name: 'EoaSum_100eth',
+          type: 'line',
+          symbol: 'none',
+          areaStyle: {},
+          data: [],
+        },
+        {
+          name: 'ETH_Price',
+          type: 'line',
+          symbol: 'none',
+          data: [],
+          yAxisIndex: 1,
+          color: '#bbbbbb'
+        }
+      ]
+    };
+
+
+    var dom9 = document.getElementById('container9');
+    var myChart9 = echarts.init(dom9, null, {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
+    var option9 = {
+      graphic: {
+        elements: [
+          {
+            type: 'text',
+            left: 'center',
+            top: 'center',
+            style: {
+              text: 'ethmetric',
+              fontSize: 50,
+              fontWeight: 'bold',
+              fill: 'rgba(0, 0, 0, 0.1)'
+            }
+          }
+        ]
+      },
+      legend: {
+        data: ['Top100_Accounts', 'Top100_EOAs', 'ETH_Price'],
+        top: '10%',
+        selected: {
+          'ETH_Price': false
+        }
+      },
+      tooltip: {
+        trigger: 'axis',
+        position: function (pt) {
+          return [pt[0], '10%'];
+        }
+      },
+      
+      title: {
+        left: 'center',
+        text: 'Ether of Top100 Accounts v.s. EOAs',
+      },
+      toolbox: {
+        feature: {
+          saveAsImage: {}
+        }
+      },
+      xAxis: {
+        type: 'time',
+        boundaryGap: false
+      },
+      yAxis: [{
+        max: 10e7,
+        type: 'value',
+        boundaryGap: [0, '100%'],
+        axisLabel: {
+          formatter: function (value) {
+            return value.toExponential();
+          }
+        }
+      },{
+        type: 'value',
+        max: 5e3,
+        boundaryGap: [0, '100%'],
+        position: 'right'
+      }],
+      dataZoom: [
+        {
+          type: 'inside',
+          start: 0,
+          end: 100
+        },
+        {
+          start: 0,
+          end: 100
+        }
+      ],
+      series: [
+        {
+          name: 'Top100_Accounts',
+          type: 'line',
+          symbol: 'none',
+          areaStyle: {},
+          data: [],
+        },
+        {
+          name: 'Top100_EOAs',
+          type: 'line',
+          symbol: 'none',
+          areaStyle: {},
+          data: [],
+        },
+        {
+          name: 'ETH_Price',
+          type: 'line',
+          symbol: 'none',
+          data: [],
+          yAxisIndex: 1,
+          color: '#bbbbbb'
+        }
+      ]
+    };
+
+
     function get_beacon_deposit(callback) {
       let xhr = new XMLHttpRequest();
       xhr.open('GET', 'process/chart_data/beacon_deposit.txt', true);
@@ -766,6 +1064,71 @@
     }
 
 
+    function get_eoacnt_100eth(callback) {
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', 'process/chart_data/eoacnt_100eth.txt', true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          lines = xhr.responseText.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].split(',');
+            option7.series[0].data.push([line[0], line[1]]);
+          }
+          callback();
+        }
+      };
+      xhr.send();
+    }
+
+
+    function get_eoasum_100eth(callback) {
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', 'process/chart_data/eoasum_100eth.txt', true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          lines = xhr.responseText.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].split(',');
+            option8.series[0].data.push([line[0],  Math.floor(line[1])]);
+          }
+          callback();
+        }
+      };
+      xhr.send();
+    }
+
+    function get_sum_top100_100eth(callback) {
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', 'process/chart_data/sum_top100_100eth.txt', true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          lines = xhr.responseText.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].split(',');
+            option9.series[0].data.push([line[0], Math.floor(line[1])]);
+          }
+          callback();
+        }
+      };
+      xhr.send();
+    }
+
+    function get_eoasum_top100_100eth(callback) {
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', 'process/chart_data/eoasum_top100_100eth.txt', true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          lines = xhr.responseText.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].split(',');
+            option9.series[1].data.push([line[0], Math.floor(line[1])]);
+          }
+          callback();
+        }
+      };
+      xhr.send();
+    }
+
     get_ethprice(function () {
       get_beacon_deposit(function () {
         get_beacon_withdrawl(function () {
@@ -827,7 +1190,40 @@
           }
           myChart6.setOption(option6);
         });
-      })
+      });
+
+      get_eoacnt_100eth(function() {
+        for (let i in ethprices) {
+          let begin = option7.series[0].data[0][0];
+          let end = option7.series[0].data[option7.series[0].data.length - 2][0];
+          if (ethprices[i][0] >= begin && ethprices[i][0] <= end) {
+            option7.series[1].data.push(ethprices[i]);
+          }
+        }
+        myChart7.setOption(option7);
+      });
+      get_eoasum_100eth(function() {
+        for (let i in ethprices) {
+          let begin = option8.series[0].data[0][0];
+          let end = option8.series[0].data[option8.series[0].data.length - 2][0];
+          if (ethprices[i][0] >= begin && ethprices[i][0] <= end) {
+            option8.series[1].data.push(ethprices[i]);
+          }
+        }
+        myChart8.setOption(option8);
+      });
+      get_sum_top100_100eth(function() {
+        get_eoasum_top100_100eth(function() {
+          for (let i in ethprices) {
+            let begin = option9.series[0].data[0][0];
+            let end = option9.series[0].data[option9.series[0].data.length - 2][0];
+            if (ethprices[i][0] >= begin && ethprices[i][0] <= end) {
+              option9.series[2].data.push(ethprices[i]);
+            }
+          }
+          myChart9.setOption(option9);
+        });
+      });
 
     });
 
@@ -839,6 +1235,9 @@
         option4.legend.selected['ETH_Price'] = true;
         option5.legend.selected['ETH_Price'] = true;
         option6.legend.selected['ETH_Price'] = true;
+        option7.legend.selected['ETH_Price'] = true;
+        option8.legend.selected['ETH_Price'] = true;
+        option9.legend.selected['ETH_Price'] = true;
       } else {
         option.legend.selected['ETH_Price'] = false;
         option2.legend.selected['ETH_Price'] = false;
@@ -846,6 +1245,9 @@
         option4.legend.selected['ETH_Price'] = false;
         option5.legend.selected['ETH_Price'] = false;
         option6.legend.selected['ETH_Price'] = false;
+        option7.legend.selected['ETH_Price'] = false;
+        option8.legend.selected['ETH_Price'] = false;
+        option9.legend.selected['ETH_Price'] = false;
       }
       myChart.setOption(option);
       myChart2.setOption(option2);
@@ -853,6 +1255,9 @@
       myChart4.setOption(option4);
       myChart5.setOption(option5);
       myChart6.setOption(option6);
+      myChart7.setOption(option7);
+      myChart8.setOption(option8);
+      myChart9.setOption(option9);
     });
 
     window.addEventListener('resize', myChart.resize);
@@ -861,6 +1266,9 @@
     window.addEventListener('resize', myChart4.resize);
     window.addEventListener('resize', myChart5.resize);
     window.addEventListener('resize', myChart6.resize);
+    window.addEventListener('resize', myChart7.resize);
+    window.addEventListener('resize', myChart8.resize);
+    window.addEventListener('resize', myChart9.resize);
     </script>
 </body>
 </html>
