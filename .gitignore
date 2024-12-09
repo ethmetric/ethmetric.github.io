@@ -1,5 +1,4 @@
 intermediate_data/
-chart_data/
 config.local.ini
 __pycache__/
 local/
@@ -10,3 +9,4 @@ process/source_data/price/
 temp/
 website_debug.sh
 t.html
+temp_chart_data/
