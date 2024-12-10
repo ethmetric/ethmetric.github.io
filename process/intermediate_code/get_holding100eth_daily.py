@@ -15,6 +15,20 @@ holding100eth = {}
 balance_of = {}
 value = 100 * (10**18)
 
+only_update = False
+files = os.listdir(output_dir)
+files.sort()
+only_update = len(files) > 0
+
+if only_update:
+    print("only_update from", files[-1])
+    lines = open(output_dir+files[-1]).read().split("\n")[:-1]
+    for line in lines:
+        arr = line.strip().split(",")
+        addr = arr[0]
+        holding100eth[addr] = int(arr[1])
+        balance_of[addr] = int(arr[2])
+    balanceupdate_daily_files = balanceupdate_daily_files[len(files):]
 
 for file in balanceupdate_daily_files:
     print("read", file)
