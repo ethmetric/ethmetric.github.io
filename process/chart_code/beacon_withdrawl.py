@@ -7,7 +7,7 @@ import functools
 import time
 
 
-f = open("chart_data/beacon_wihdrawl.txt", "w")
+f = open("chart_data/beacon_withdrawl.txt", "w")
 
 WithdrawalCsvs = glob.glob(datadir+"*Withdrawal.csv")
 WithdrawalCsvs.sort(key=functools.cmp_to_key(sort_by_blocknum))
