@@ -11,3 +11,4 @@ website_debug.sh
 t.html
 temp_chart_data/
 process/loop.sh*
+process/drawpy/
