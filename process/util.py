@@ -46,6 +46,7 @@ def date_to_last_block(date_str):
 
     BlockInfoCsvs = glob.glob(datadir+"*Block_Info.csv")
     BlockInfoCsvs.sort(key=functools.cmp_to_key(sort_by_blocknum))
+    print(BlockInfoCsvs)
     ret = 0
 
     for file in reversed(BlockInfoCsvs):

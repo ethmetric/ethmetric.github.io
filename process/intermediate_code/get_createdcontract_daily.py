@@ -25,7 +25,7 @@ if only_update:
     last_date = files[-1].split(".")[0]
     last_write_daytime = date_to_day_time(last_date) + 86400
     last_block = date_to_last_block(last_date)
-    print("only update from", last_block)
+    print("only update from", last_block, last_write_daytime, last_date)
     ContractInfoCsvs = prune_files(ContractInfoCsvs, last_block)
 
 print(datadir, ContractInfoCsvs)
