@@ -15,6 +15,61 @@
         align-items: center;
         justify-content: center;
         aspect-ratio: 4 / 3;
+        position: relative;
+      }
+      
+      .chart-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+      
+      .fullscreen-btn {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 12px;
+        cursor: pointer;
+        color: #333;
+        transition: all 0.2s;
+      }
+      
+      .fullscreen-btn:hover {
+        background: rgba(255, 255, 255, 0.95);
+        transform: scale(1.05);
+      }
+      
+      .chart-fullscreen {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 9999 !important;
+        background: white !important;
+        margin: 0 !important;
+        padding: 20px !important;
+        box-sizing: border-box;
+      }
+      
+      .chart-fullscreen .chart {
+        width: 100% !important;
+        height: calc(100vh - 40px) !important;
+        aspect-ratio: unset !important;
+      }
+      
+      .chart-normal-row {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      
+      body.fullscreen-active {
+        overflow: hidden;
       }
     </style>
 </head>
@@ -50,33 +105,60 @@
         </div>
     </nav>
     <div class="container mt-4">
-        <div class="row">
-          <div class="col-12 col-md-4 mt-1 mb-3">
-              <div class="chart" id="container"></div>
+        <div class="row" id="charts-grid">
+          <div class="col-12 col-md-4 mt-1 mb-3 chart-container-wrapper" data-chart-id="container">
+              <div class="chart-container">
+                  <button class="fullscreen-btn" onclick="toggleFullscreen('container')">⛶</button>
+                  <div class="chart" id="container"></div>
+              </div>
           </div>
-          <div class="col-12 col-md-4 mt-1 mb-3">
-              <div class="chart" id="container2"></div>
+          <div class="col-12 col-md-4 mt-1 mb-3 chart-container-wrapper" data-chart-id="container2">
+              <div class="chart-container">
+                  <button class="fullscreen-btn" onclick="toggleFullscreen('container2')">⛶</button>
+                  <div class="chart" id="container2"></div>
+              </div>
           </div>
-          <div class="col-12 col-md-4 mt-1 mb-3">
-              <div class="chart" id="container3"></div>
+          <div class="col-12 col-md-4 mt-1 mb-3 chart-container-wrapper" data-chart-id="container3">
+              <div class="chart-container">
+                  <button class="fullscreen-btn" onclick="toggleFullscreen('container3')">⛶</button>
+                  <div class="chart" id="container3"></div>
+              </div>
           </div>
-          <div class="col-12 col-md-4 mt-1 mb-3">
-              <div class="chart" id="container4"></div>
+          <div class="col-12 col-md-4 mt-1 mb-3 chart-container-wrapper" data-chart-id="container4">
+              <div class="chart-container">
+                  <button class="fullscreen-btn" onclick="toggleFullscreen('container4')">⛶</button>
+                  <div class="chart" id="container4"></div>
+              </div>
           </div>
-          <div class="col-12 col-md-4 mt-1 mb-3">
-              <div class="chart" id="container5"></div>
+          <div class="col-12 col-md-4 mt-1 mb-3 chart-container-wrapper" data-chart-id="container5">
+              <div class="chart-container">
+                  <button class="fullscreen-btn" onclick="toggleFullscreen('container5')">⛶</button>
+                  <div class="chart" id="container5"></div>
+              </div>
           </div>
-          <div class="col-12 col-md-4 mt-1 mb-3">
-              <div class="chart" id="container6"></div>
+          <div class="col-12 col-md-4 mt-1 mb-3 chart-container-wrapper" data-chart-id="container6">
+              <div class="chart-container">
+                  <button class="fullscreen-btn" onclick="toggleFullscreen('container6')">⛶</button>
+                  <div class="chart" id="container6"></div>
+              </div>
           </div>
-          <div class="col-12 col-md-4 mt-1 mb-3">
-              <div class="chart" id="container7"></div>
+          <div class="col-12 col-md-4 mt-1 mb-3 chart-container-wrapper" data-chart-id="container7">
+              <div class="chart-container">
+                  <button class="fullscreen-btn" onclick="toggleFullscreen('container7')">⛶</button>
+                  <div class="chart" id="container7"></div>
+              </div>
           </div>
-          <div class="col-12 col-md-4 mt-1 mb-3">
-              <div class="chart" id="container8"></div>
+          <div class="col-12 col-md-4 mt-1 mb-3 chart-container-wrapper" data-chart-id="container8">
+              <div class="chart-container">
+                  <button class="fullscreen-btn" onclick="toggleFullscreen('container8')">⛶</button>
+                  <div class="chart" id="container8"></div>
+              </div>
           </div>
-          <div class="col-12 col-md-4 mt-1 mb-3">
-              <div class="chart" id="container9"></div>
+          <div class="col-12 col-md-4 mt-1 mb-3 chart-container-wrapper" data-chart-id="container9">
+              <div class="chart-container">
+                  <button class="fullscreen-btn" onclick="toggleFullscreen('container9')">⛶</button>
+                  <div class="chart" id="container9"></div>
+              </div>
           </div>
         </div>
     </div>
@@ -1269,6 +1351,117 @@
     window.addEventListener('resize', myChart7.resize);
     window.addEventListener('resize', myChart8.resize);
     window.addEventListener('resize', myChart9.resize);
+
+    // Fullscreen functionality
+    let currentFullscreenChart = null;
+    let originalParent = null;
+    let originalClasses = null;
+
+    function toggleFullscreen(chartId) {
+      const chartWrapper = document.querySelector(`[data-chart-id="${chartId}"]`);
+      const chartContainer = chartWrapper.querySelector('.chart-container');
+      const chartElement = document.getElementById(chartId);
+      
+      if (currentFullscreenChart === chartId) {
+        // Exit fullscreen
+        exitFullscreen();
+      } else {
+        // Enter fullscreen
+        if (currentFullscreenChart) {
+          exitFullscreen();
+        }
+        enterFullscreen(chartId, chartWrapper, chartContainer);
+      }
+    }
+
+    function enterFullscreen(chartId, chartWrapper, chartContainer) {
+      // Save original state
+      currentFullscreenChart = chartId;
+      originalParent = chartWrapper;
+      originalClasses = chartWrapper.className;
+
+      // Hide other charts
+      const allWrappers = document.querySelectorAll('.chart-container-wrapper');
+      allWrappers.forEach(wrapper => {
+        if (wrapper !== chartWrapper) {
+          wrapper.style.display = 'none';
+        }
+      });
+
+      // Set fullscreen styles
+      chartWrapper.className = 'chart-fullscreen';
+      document.body.classList.add('fullscreen-active');
+
+      // Update button text
+      const btn = chartContainer.querySelector('.fullscreen-btn');
+      btn.textContent = '✕';
+      btn.title = 'Exit fullscreen';
+
+      // Resize chart
+      setTimeout(() => {
+        const chart = getChartInstance(chartId);
+        if (chart) {
+          chart.resize();
+        }
+      }, 100);
+    }
+
+    function exitFullscreen() {
+      if (!currentFullscreenChart) return;
+
+      const chartWrapper = document.querySelector('.chart-fullscreen');
+      if (!chartWrapper) return;
+
+      // Restore original styles
+      chartWrapper.className = originalClasses;
+      document.body.classList.remove('fullscreen-active');
+
+      // Show all charts
+      const allWrappers = document.querySelectorAll('.chart-container-wrapper');
+      allWrappers.forEach(wrapper => {
+        wrapper.style.display = '';
+      });
+
+      // Restore button text
+      const btn = chartWrapper.querySelector('.fullscreen-btn');
+      btn.textContent = '⛶';
+      btn.title = 'Fullscreen';
+
+      // Resize all charts
+      setTimeout(() => {
+        [myChart, myChart2, myChart3, myChart4, myChart5, myChart6, myChart7, myChart8, myChart9].forEach(chart => {
+          if (chart) {
+            chart.resize();
+          }
+        });
+      }, 100);
+
+      currentFullscreenChart = null;
+      originalParent = null;
+      originalClasses = null;
+    }
+
+    function getChartInstance(chartId) {
+      const chartMap = {
+        'container': myChart,
+        'container2': myChart2,
+        'container3': myChart3,
+        'container4': myChart4,
+        'container5': myChart5,
+        'container6': myChart6,
+        'container7': myChart7,
+        'container8': myChart8,
+        'container9': myChart9
+      };
+      return chartMap[chartId];
+    }
+
+    // ESC key to exit fullscreen
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && currentFullscreenChart) {
+        exitFullscreen();
+      }
+    });
     </script>
 </body>
 </html>
