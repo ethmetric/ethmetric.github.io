@@ -11,6 +11,8 @@ for file in blobtx_daily_files:
     total_fees = 0
 
     lines = open(file).read().split("\n")[:-1]
+    if len(lines) == 0:
+        continue
     first_block = int(lines[0].split(",")[0])
     last_block = int(lines[-1].split(",")[0])
 
