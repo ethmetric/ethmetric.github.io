@@ -83,6 +83,8 @@ def add(to, value):
 def sub(sender, value):
     if sender not in balance_of or balance_of[sender] < value:
         print(sender, "err!")
+        if sender in balance_of:
+            print(balance_of[sender], value)
         exit()
     balance_of[sender] -= value
     balanceupdate_of[sender] = balance_of[sender]

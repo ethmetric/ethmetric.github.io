@@ -6,6 +6,9 @@ import glob
 import functools
 import time
 
+if not os.path.exists("chart_data/beacon_deposit.txt"):
+    exit()
+
 lastday = open("chart_data/beacon_deposit.txt").read().split("\n")[-2][:10]
 
 files = glob.glob("intermediate_data/*/*")
