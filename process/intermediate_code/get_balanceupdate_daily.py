@@ -8,14 +8,18 @@ import time
 import mmap
 import subprocess
 
-# ==================== 余额快照 ====================
-# 全量地址余额不驻内存, 拆成两层:
-#   - 快照: 按地址排序的定长二进制文件 (20 字节地址 + 16 字节大端余额),
-#     只读不可变, mmap + 二分查找, 不占堆内存;
-#   - overlay: 当天的变更放内存 dict, 查询先 overlay 后快照。
-# 收盘时 overlay 排序后与旧快照两路归并写出新快照 (.tmp + rename 原子替换),
-# 未变更区间整块字节拷贝。挂在中途旧快照完好, 删掉重跑即可。
-# 快照只是缓存, 删掉了随时可以由 balanceupdate_daily/ 日更文件重建 (见下方自动构建)。
+# ==================== balance snapshot ====================
+# The full address->balance state is NOT kept in memory; it has two layers:
+#   - snapshot: fixed-length binary records sorted by address (20-byte address
+#     + 16-byte big-endian balance), read-only and immutable, queried via
+#     mmap + binary search, no heap memory;
+#   - overlay: the changes of the current day(s) in a small in-memory dict,
+#     lookups hit the overlay first, then the snapshot.
+# At a day boundary the overlay is merged with the old snapshot into a new
+# one (tmp + rename atomic replace); unchanged ranges are bulk-copied.
+# A crash at any point leaves the previous snapshot intact. The snapshot is
+# only a cache: it can always be rebuilt from the balanceupdate_daily/ files
+# (see build_snapshot_from_history below).
 
 RECORD_SIZE = 36  # 20 bytes address + 16 bytes big-endian balance
 ADDR_SIZE = 20
@@ -25,9 +29,11 @@ COPY_CHUNK = 8 * 1024 * 1024
 DAILY_DIR = "intermediate_data/balanceupdate_daily/"
 SNAPSHOT_DIR = "intermediate_data/balance_snapshot/"
 
-# 距上一份快照满这么多天, 在日界写一份新快照 (默认每天一份, 约 11GB 顺序写, 一分钟级)
+# write a new snapshot at a day boundary when the latest one is this many
+# days old (default: every day, ~11GB sequential write, about a minute)
 SNAPSHOT_INTERVAL_DAYS = 1
-# overlay 记录数上限, 超过就在日界强制落一份快照, 保护内存 (全量重跑时靠它限峰)
+# hard cap on overlay records: force a snapshot at the day boundary to
+# protect memory (this is what bounds memory during a full rebuild)
 OVERLAY_MAX_RECORDS = 20_000_000
 
 
@@ -42,7 +48,7 @@ def key_to_addr(key):
 
 
 class SnapshotReader:
-    """只读快照: mmap + 二分查找。"""
+    """read-only snapshot: mmap + binary search."""
 
     def __init__(self, path):
         self.path = path
@@ -51,7 +57,7 @@ class SnapshotReader:
         self.nrec = len(self.mm) // RECORD_SIZE
 
     def lower_bound(self, key):
-        """返回第一个地址 >= key 的记录下标 (== nrec 表示全部小于 key)。"""
+        """index of the first record whose address >= key (== nrec if all less)."""
         lo, hi = 0, self.nrec
         mm = self.mm
         while lo < hi:
@@ -83,7 +89,7 @@ class SnapshotReader:
 
 
 def _copy_records(fin, out, begin, end):
-    """把快照中 [begin, end) 的记录原样大块拷贝到 out。"""
+    """bulk-copy snapshot records [begin, end) to out."""
     fin.seek(begin * RECORD_SIZE)
     remaining = (end - begin) * RECORD_SIZE
     while remaining > 0:
@@ -95,8 +101,9 @@ def _copy_records(fin, out, begin, end):
 
 
 def write_snapshot(base, overlay, final_path):
-    """base(SnapshotReader 或 None) 与 overlay(dict: key->balance) 归并,
-    原子写出新快照到 final_path。调用方负责之后关闭旧 base。"""
+    """merge base (SnapshotReader or None) with overlay (dict: key->balance)
+    and atomically write the new snapshot to final_path.
+    The caller closes the old base afterwards."""
     items = sorted(overlay.items())
     tmp_path = final_path + ".tmp"
     with open(tmp_path, "wb") as out:
@@ -111,16 +118,16 @@ def write_snapshot(base, overlay, final_path):
                 _copy_records(fin, out, prev, idx)
                 out.write(key + bal.to_bytes(BAL_SIZE, "big"))
                 if idx < base.nrec and base.addr_at(idx) == key:
-                    prev = idx + 1  # 覆盖旧值
+                    prev = idx + 1  # replace old value
                 else:
-                    prev = idx  # 新地址, 插入
+                    prev = idx  # new address, insert
             _copy_records(fin, out, prev, base.nrec)
             fin.close()
     os.replace(tmp_path, final_path)
 
 
 def latest_snapshot():
-    """返回 (date_str, path), 没有快照返回 (None, None)。"""
+    """return (date_str, path), or (None, None) when there is no snapshot."""
     files = glob.glob(SNAPSHOT_DIR + "*.bin")
     if not files:
         return None, None
@@ -129,7 +136,8 @@ def latest_snapshot():
 
 
 def prune_old_snapshots(keep=2):
-    """只保留最近几份快照 (最新一份在用, 前一份留给回滚), 其余删除。"""
+    """keep only the newest few snapshots (the latest in use, the previous
+    one for rollback), delete the rest."""
     files = glob.glob(SNAPSHOT_DIR + "*.bin")
     files.sort()
     for f in files[:-keep]:
@@ -138,10 +146,11 @@ def prune_old_snapshots(keep=2):
 
 
 class BalanceState:
-    """余额状态: 只读快照 base + 内存 overlay。
+    """balance state: read-only snapshot base + in-memory overlay.
 
-    get 先查 overlay 再二分查快照; add/sub 只写 overlay。
-    touched 是当天被动过的地址 (保持插入序), 用于写日更文件。"""
+    get checks the overlay first, then binary-searches the snapshot;
+    add/sub only write the overlay. touched holds the addresses modified
+    during the current day (insertion-ordered) for writing the daily file."""
 
     def __init__(self, snapshot_path=None):
         self.base = SnapshotReader(snapshot_path) if snapshot_path else None
@@ -175,7 +184,7 @@ class BalanceState:
         self._set(addr, cur - value)
 
     def flush_day(self, day):
-        """写日更 diff 文件 (tmp+rename), 之后清 touched。"""
+        """write the daily diff file (tmp+rename), then clear touched."""
         final_path = DAILY_DIR + day + ".txt"
         with open(final_path + ".tmp", "w") as f:
             for key in self.touched:
@@ -184,7 +193,8 @@ class BalanceState:
         self.touched = {}
 
     def maybe_write_snapshot(self, day, day_time, last_snapshot_daytime):
-        """满足条件时在日界落一份新快照并切换 base, 返回是否写了。"""
+        """write a new snapshot at the day boundary when due and switch base;
+        returns whether one was written."""
         recent = day_time >= time.time() - 3 * 86400
         due = last_snapshot_daytime is None or \
             day_time - last_snapshot_daytime >= SNAPSHOT_INTERVAL_DAYS * 86400
@@ -202,14 +212,18 @@ class BalanceState:
 
 
 def build_snapshot_from_history(last_date):
-    """没有快照时自动从历史日更文件构建一份 (一次性迁移/快照被删后的重建)。
+    """build a snapshot from the historical daily files when none exists
+    (one-off migration / rebuild after the snapshot was deleted).
 
-    日更文件按日期从新到旧拼接 (同一地址最新的余额在最前),
-    用 GNU sort 稳定模式按地址去重保留第一次出现 (= 最新值),
-    再转定长二进制。全程流式 + 外部排序, 内存 O(1)。
+    Daily files are concatenated newest-first (so for each address the
+    newest balance comes first), then GNU sort in stable mode dedupes by
+    address keeping the first occurrence (= the newest value), and the
+    result is converted to fixed-length binary. Fully streaming + external
+    sort, O(1) memory.
 
-    临时文件 (约日更文件总大小的 2 倍) 默认写在快照目录,
-    可用环境变量 BALANCE_SNAPSHOT_TMPDIR 指定到其他磁盘。"""
+    Temp files (about 2x the total size of the daily files) go to the
+    snapshot dir by default; set env BALANCE_SNAPSHOT_TMPDIR to put them
+    on another disk."""
     tmpdir = os.environ.get("BALANCE_SNAPSHOT_TMPDIR", SNAPSHOT_DIR)
     if not tmpdir.endswith("/"):
         tmpdir += "/"
@@ -263,7 +277,7 @@ def build_snapshot_from_history(last_date):
     return final_path
 
 
-# ==================== 主流程 ====================
+# ==================== main ====================
 
 output_dir = DAILY_DIR
 for d in (output_dir, SNAPSHOT_DIR):
@@ -297,7 +311,8 @@ snapshot_date, snapshot_path = latest_snapshot()
 if only_update:
     last_date = files[-1].split(".")[0]
 
-    # rollback 可能删掉了尾部日更文件, 比最后日更文件新的快照一并作废
+    # rollback may have deleted the newest daily files; snapshots newer than
+    # the last daily file are stale and must be discarded too
     if snapshot_date is not None and snapshot_date > last_date:
         for f in glob.glob(SNAPSHOT_DIR + "*.bin"):
             if f.split("/")[-1].split(".")[0] > last_date:
@@ -305,7 +320,7 @@ if only_update:
                 os.remove(f)
         snapshot_date, snapshot_path = latest_snapshot()
 
-    # 没有快照 (首次迁移, 或快照被删) 就从历史日更文件自动重建一份
+    # no snapshot (first migration, or it was deleted): rebuild from history
     if snapshot_path is None:
         snapshot_path = build_snapshot_from_history(last_date)
         snapshot_date = last_date
@@ -321,7 +336,7 @@ if only_update:
     state = BalanceState(snapshot_path)
     last_snapshot_daytime = date_to_day_time(snapshot_date)
 
-    # 只需回放比快照新的日更文件 (间隔内的几天)
+    # only replay daily files newer than the snapshot (a few days at most)
     for file in files:
         date = file.split(".")[0]
         if date <= snapshot_date:

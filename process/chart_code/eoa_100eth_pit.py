@@ -1,19 +1,22 @@
-"""时点定义 (point-in-time) 的 EOA 统计对比工具。
+"""Point-in-time EOA statistics: comparison tool.
 
-现版 eoacnt_100eth / eoasum_100eth / eoasum_top100_100eth 用的是"终局定义":
-只要一个地址在任何时刻被确认是合约, 就从所有历史天除名, 所以要每天全量重算。
+The current eoacnt_100eth / eoasum_100eth / eoasum_top100_100eth scripts use
+"final" semantics: once an address is known to be a contract it is excluded
+from ALL history, which forces a full recompute every day.
 
-本脚本用"时点定义"重算同一组指标: 地址只在它被创建为合约的那天起才被排除,
-部署之前 (例如 CREATE2 反事实地址预先收到 ETH 的阶段) 仍算 EOA。
-历史天一旦写下就不变, 因此这个口径天然支持增量更新。
+This script recomputes the same metrics with point-in-time semantics: an
+address is excluded only from the day it was created as a contract; before
+its deployment (e.g. a CREATE2 counterfactual address that received ETH
+early) it still counts as an EOA. History never changes once written, so
+this semantics naturally supports incremental updates.
 
-输出写到新文件, 与现有图表数据对比, 不覆盖:
+Output goes to NEW files, nothing is overwritten:
   chart_data/eoacnt_100eth_pit.txt
   chart_data/eoasum_100eth_pit.txt
   chart_data/eoasum_top100_100eth_pit.txt
-结尾打印两个口径的逐日差异汇总。
+At the end a per-day diff summary against the current data is printed.
 
-在 process/ 目录下运行:  python3 chart_code/eoa_100eth_pit.py
+run from process/:  python3 chart_code/eoa_100eth_pit.py
 """
 import glob
 
@@ -23,14 +26,14 @@ createdcontract_daily_files = glob.glob("intermediate_data/createdcontract_daily
 holding100eth_daily_files.sort()
 createdcontract_daily_files.sort()
 
-# 按天整理合约创建表: day -> [addr, ...]
+# contract creation table by day: day -> [addr, ...]
 created_by_day = {}
 for file in createdcontract_daily_files:
     day = file.split("/")[-1].split(".")[0]
     created_by_day[day] = [line.strip() for line in open(file).readlines()]
 created_days = sorted(created_by_day.keys())
 
-contracts = set()       # 截至当前天已创建的合约 (时点口径)
+contracts = set()       # contracts created up to the current day (pit)
 created_idx = 0
 
 f_cnt = open("chart_data/eoacnt_100eth_pit.txt", "w")
@@ -40,7 +43,7 @@ f_top = open("chart_data/eoasum_top100_100eth_pit.txt", "w")
 for file in holding100eth_daily_files:
     day = file.split("/")[-1].split(".")[0]
 
-    # 只把当前天及之前创建的合约纳入排除集
+    # only contracts created on or before the current day are excluded
     while created_idx < len(created_days) and created_days[created_idx] <= day:
         contracts.update(created_by_day[created_days[created_idx]])
         created_idx += 1
@@ -70,7 +73,7 @@ f_cnt.close()
 f_sum.close()
 f_top.close()
 
-# ==================== 与现有 (终局定义) 数据对比 ====================
+# ==================== diff against current (final-semantics) data ====================
 
 def load(path):
     ret = {}
