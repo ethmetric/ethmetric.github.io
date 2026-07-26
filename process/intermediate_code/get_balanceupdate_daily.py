@@ -206,14 +206,23 @@ def build_snapshot_from_history(last_date):
 
     日更文件按日期从新到旧拼接 (同一地址最新的余额在最前),
     用 GNU sort 稳定模式按地址去重保留第一次出现 (= 最新值),
-    再转定长二进制。全程流式 + 外部排序, 内存 O(1)。"""
+    再转定长二进制。全程流式 + 外部排序, 内存 O(1)。
+
+    临时文件 (约日更文件总大小的 2 倍) 默认写在快照目录,
+    可用环境变量 BALANCE_SNAPSHOT_TMPDIR 指定到其他磁盘。"""
+    tmpdir = os.environ.get("BALANCE_SNAPSHOT_TMPDIR", SNAPSHOT_DIR)
+    if not tmpdir.endswith("/"):
+        tmpdir += "/"
+    os.makedirs(tmpdir, exist_ok=True)
+
     files = glob.glob(DAILY_DIR + "*.txt")
     files.sort()
     final_path = SNAPSHOT_DIR + last_date + ".bin"
-    tmp_concat = SNAPSHOT_DIR + "build_concat.tmp"
-    tmp_sorted = SNAPSHOT_DIR + "build_sorted.tmp"
+    tmp_concat = tmpdir + "build_concat.tmp"
+    tmp_sorted = tmpdir + "build_sorted.tmp"
 
     print("build snapshot from", len(files), "daily files (one-off, slow) ...")
+    print("tmpdir:", tmpdir)
     with open(tmp_concat, "wb") as out:
         for path in reversed(files):
             with open(path, "rb") as f:
@@ -231,7 +240,7 @@ def build_snapshot_from_history(last_date):
                     out.write(chunk)
 
     subprocess.run(
-        ["sort", "-s", "-u", "-t,", "-k1,1", "-S", "1G", "-T", SNAPSHOT_DIR,
+        ["sort", "-s", "-u", "-t,", "-k1,1", "-S", "1G", "-T", tmpdir,
          "-o", tmp_sorted, tmp_concat],
         check=True, env={**os.environ, "LC_ALL": "C"})
 
