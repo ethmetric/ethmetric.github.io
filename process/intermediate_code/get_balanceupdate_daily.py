@@ -15,11 +15,11 @@ import subprocess
 #     mmap + binary search, no heap memory;
 #   - overlay: the changes of the current day(s) in a small in-memory dict,
 #     lookups hit the overlay first, then the snapshot.
-# At a day boundary the overlay is merged with the old snapshot into a new
-# one (tmp + rename atomic replace); unchanged ranges are bulk-copied.
-# A crash at any point leaves the previous snapshot intact. The snapshot is
-# only a cache: it can always be rebuilt from the balanceupdate_daily/ files
-# (see build_snapshot_from_history below).
+# At the end of a run the overlay of the last completed day is merged with
+# the old snapshot into a new one (tmp + rename atomic replace); unchanged
+# ranges are bulk-copied. A crash at any point leaves the previous snapshot
+# intact. The snapshot is only a cache: it can always be rebuilt from the
+# balanceupdate_daily/ files (see build_snapshot_from_history below).
 
 RECORD_SIZE = 36  # 20 bytes address + 16 bytes big-endian balance
 ADDR_SIZE = 20
@@ -29,12 +29,10 @@ COPY_CHUNK = 8 * 1024 * 1024
 DAILY_DIR = "intermediate_data/balanceupdate_daily/"
 SNAPSHOT_DIR = "intermediate_data/balance_snapshot/"
 
-# write a new snapshot at a day boundary when the latest one is this many
-# days old (default: every day, ~11GB sequential write, about a minute)
+# write a new snapshot at the end of a run when the latest one is this many
+# days old (default: every day, ~11GB sequential write, about a minute).
+# Only the newest snapshot file is kept.
 SNAPSHOT_INTERVAL_DAYS = 1
-# hard cap on overlay records: force a snapshot at the day boundary to
-# protect memory (this is what bounds memory during a full rebuild)
-OVERLAY_MAX_RECORDS = 20_000_000
 
 
 def addr_to_key(addr):
@@ -135,9 +133,8 @@ def latest_snapshot():
     return files[-1].split("/")[-1].split(".")[0], files[-1]
 
 
-def prune_old_snapshots(keep=2):
-    """keep only the newest few snapshots (the latest in use, the previous
-    one for rollback), delete the rest."""
+def prune_old_snapshots(keep=1):
+    """keep only the newest snapshot file(s), delete the rest."""
     files = glob.glob(SNAPSHOT_DIR + "*.bin")
     files.sort()
     for f in files[:-keep]:
@@ -150,12 +147,19 @@ class BalanceState:
 
     get checks the overlay first, then binary-searches the snapshot;
     add/sub only write the overlay. touched holds the addresses modified
-    during the current day (insertion-ordered) for writing the daily file."""
+    during the current day (insertion-ordered) for writing the daily file.
+
+    A snapshot is written at most once per run, at the end (finalize), for
+    the last completed day only: flush_day keeps a checkpoint copy of the
+    overlay at each day boundary, so the partial changes of the unfinished
+    day never leak into a snapshot. Only the newest snapshot file is kept."""
 
     def __init__(self, snapshot_path=None):
         self.base = SnapshotReader(snapshot_path) if snapshot_path else None
         self.overlay = {}
         self.touched = {}
+        self.checkpoint = {}
+        self.checkpoint_day = None
 
     def get(self, addr):
         key = addr_to_key(addr)
@@ -184,31 +188,36 @@ class BalanceState:
         self._set(addr, cur - value)
 
     def flush_day(self, day):
-        """write the daily diff file (tmp+rename), then clear touched."""
+        """write the daily diff file (tmp+rename), then clear touched.
+        Also checkpoints the overlay (state at end of this completed day)
+        so finalize can snapshot the last completed day only."""
         final_path = DAILY_DIR + day + ".txt"
         with open(final_path + ".tmp", "w") as f:
             for key in self.touched:
                 f.write(key_to_addr(key) + "," + str(self.overlay[key]) + "\n")
         os.replace(final_path + ".tmp", final_path)
         self.touched = {}
+        self.checkpoint = dict(self.overlay)
+        self.checkpoint_day = day
 
-    def maybe_write_snapshot(self, day, day_time, last_snapshot_daytime):
-        """write a new snapshot at the day boundary when due and switch base;
-        returns whether one was written."""
-        recent = day_time >= time.time() - 3 * 86400
+    def finalize(self, last_snapshot_daytime):
+        """end of run: write ONE snapshot for the last completed day when
+        due (SNAPSHOT_INTERVAL_DAYS since the previous snapshot), then
+        prune older snapshot files."""
+        if not self.checkpoint:
+            return
+        day_time = date_to_day_time(self.checkpoint_day)
         due = last_snapshot_daytime is None or \
             day_time - last_snapshot_daytime >= SNAPSHOT_INTERVAL_DAYS * 86400
-        if len(self.overlay) > OVERLAY_MAX_RECORDS or (recent and due):
-            path = SNAPSHOT_DIR + day + ".bin"
-            print("write snapshot", path, "overlay", len(self.overlay))
-            write_snapshot(self.base, self.overlay, path)
-            if self.base is not None:
-                self.base.close()
-            self.base = SnapshotReader(path)
-            self.overlay = {}
-            prune_old_snapshots(keep=2)
-            return True
-        return False
+        if not due:
+            return
+        path = SNAPSHOT_DIR + self.checkpoint_day + ".bin"
+        print("write snapshot", path, "overlay", len(self.checkpoint))
+        write_snapshot(self.base, self.checkpoint, path)
+        if self.base is not None:
+            self.base.close()
+        self.base = SnapshotReader(path)
+        prune_old_snapshots(keep=1)
 
 
 def build_snapshot_from_history(last_date):
@@ -453,8 +462,6 @@ for file in BlockTransactionCsvs:
             
             print(day, last_write_daytime, len(state.touched))
             state.flush_day(day)
-            if state.maybe_write_snapshot(day, last_write_daytime, last_snapshot_daytime):
-                last_snapshot_daytime = last_write_daytime
         
         if isError == "None" and tx_value>0:
             if tx_to != "None":
@@ -519,3 +526,7 @@ for file in BlockTransactionCsvs:
         rewardLine = rewardCSV.readline().strip()
     
     rewardCSV.close()
+
+
+# one snapshot per run, for the last completed day only
+state.finalize(last_snapshot_daytime)
