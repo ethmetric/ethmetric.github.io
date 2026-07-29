@@ -233,7 +233,6 @@
         }
       },{
         type: 'value',
-        max: 5e3,
         boundaryGap: [0, '100%'],
         position: 'right'
       }],
@@ -338,7 +337,6 @@
         }
       },{
         type: 'value',
-        max: 5e3,
         boundaryGap: [0, '100%'],
         position: 'right'
       }],
@@ -433,7 +431,6 @@
         },
       },{
         type: 'value',
-        max: 5e3,
         boundaryGap: [0, '100%'],
         position: 'right'
       }],
@@ -527,7 +524,6 @@
         boundaryGap: [0, '100%']
       },{
         type: 'value',
-        max: 5e3,
         boundaryGap: [0, '100%'],
         position: 'right'
       }],
@@ -617,7 +613,6 @@
         boundaryGap: [0, '100%'],
       },{
         type: 'value',
-        max: 5e3,
         boundaryGap: [0, '100%'],
         position: 'right'
       }],
@@ -710,7 +705,6 @@
         }
       },{
         type: 'value',
-        max: 5e3,
         boundaryGap: [0, '100%'],
         position: 'right'
       }],
@@ -814,7 +808,6 @@
         }
       },{
         type: 'value',
-        max: 5e3,
         boundaryGap: [0, '100%'],
         position: 'right'
       }],
@@ -908,7 +901,6 @@
         }
       },{
         type: 'value',
-        max: 5e3,
         boundaryGap: [0, '100%'],
         position: 'right'
       }],
@@ -1002,7 +994,6 @@
         }
       },{
         type: 'value',
-        max: 5e3,
         boundaryGap: [0, '100%'],
         position: 'right'
       }],
@@ -1042,6 +1033,39 @@
         }
       ]
     };
+
+
+    // Rescale the right y-axis (ETH_Price) to the visible window on every x-axis zoom
+    function bindEthPriceAxisAutoScale(chart, option) {
+      chart.on('datazoom', function () {
+        let priceData = option.series[option.series.length - 1].data;
+        if (!priceData.length) return;
+        let extent = chart.getModel().getComponent('xAxis', 0).axis.scale.getExtent();
+        let min = Infinity;
+        let max = -Infinity;
+        for (let i = 0; i < priceData.length; i++) {
+          let t = echarts.time.parse(priceData[i][0]);
+          if (t >= extent[0] && t <= extent[1]) {
+            let v = priceData[i][1];
+            if (v < min) min = v;
+            if (v > max) max = v;
+          }
+        }
+        if (min === Infinity) return;
+        let pad = (max - min) * 0.05 || 1;
+        chart.setOption({ yAxis: [{}, { min: Math.floor(min - pad), max: Math.ceil(max + pad) }] });
+      });
+    }
+
+    bindEthPriceAxisAutoScale(myChart, option);
+    bindEthPriceAxisAutoScale(myChart2, option2);
+    bindEthPriceAxisAutoScale(myChart3, option3);
+    bindEthPriceAxisAutoScale(myChart4, option4);
+    bindEthPriceAxisAutoScale(myChart5, option5);
+    bindEthPriceAxisAutoScale(myChart6, option6);
+    bindEthPriceAxisAutoScale(myChart7, option7);
+    bindEthPriceAxisAutoScale(myChart8, option8);
+    bindEthPriceAxisAutoScale(myChart9, option9);
 
 
     function get_beacon_deposit(callback) {
