@@ -6,7 +6,6 @@ import glob
 import functools
 import time
 import mmap
-import subprocess
 
 # ==================== balance snapshot ====================
 # The full address->balance state is NOT kept in memory; it has two layers:
@@ -224,64 +223,42 @@ def build_snapshot_from_history(last_date):
     """build a snapshot from the historical daily files when none exists
     (one-off migration / rebuild after the snapshot was deleted).
 
-    Daily files are concatenated newest-first (so for each address the
-    newest balance comes first), then GNU sort in stable mode dedupes by
-    address keeping the first occurrence (= the newest value), and the
-    result is converted to fixed-length binary. Fully streaming + external
-    sort, O(1) memory.
-
-    Temp files (about 2x the total size of the daily files) go to the
-    snapshot dir by default; set env BALANCE_SNAPSHOT_TMPDIR to put them
-    on another disk."""
-    tmpdir = os.environ.get("BALANCE_SNAPSHOT_TMPDIR", SNAPSHOT_DIR)
-    if not tmpdir.endswith("/"):
-        tmpdir += "/"
-    os.makedirs(tmpdir, exist_ok=True)
-
+    Daily files are read newest-first into an in-memory dict, keeping the
+    first occurrence of each address (= the newest balance); genesis.csv
+    is read last (it is the oldest source). The dict is then sorted by
+    address and written as fixed-length binary. Needs no temp disk space,
+    but the full address set lives in RAM (tens of GB); keys are stored
+    as 20-byte bytes to roughly halve dict memory vs address strings."""
     files = glob.glob(DAILY_DIR + "*.txt")
     files.sort()
     final_path = SNAPSHOT_DIR + last_date + ".bin"
-    tmp_concat = tmpdir + "build_concat.tmp"
-    tmp_sorted = tmpdir + "build_sorted.tmp"
 
-    print("build snapshot from", len(files), "daily files (one-off, slow) ...")
-    print("tmpdir:", tmpdir)
-    with open(tmp_concat, "wb") as out:
-        for path in reversed(files):
-            with open(path, "rb") as f:
-                while True:
-                    chunk = f.read(COPY_CHUNK)
-                    if not chunk:
-                        break
-                    out.write(chunk)
-        if os.path.exists("source_data/genesis.csv"):
-            with open("source_data/genesis.csv", "rb") as f:
-                while True:
-                    chunk = f.read(COPY_CHUNK)
-                    if not chunk:
-                        break
-                    out.write(chunk)
-
-    subprocess.run(
-        ["sort", "-s", "-u", "-t,", "-k1,1", "-S", "1G", "-T", tmpdir,
-         "-o", tmp_sorted, tmp_concat],
-        check=True, env={**os.environ, "LC_ALL": "C"})
+    print("build snapshot from", len(files), "daily files in memory (one-off, slow) ...")
+    balance_of = {}
+    sources = list(reversed(files))
+    if os.path.exists("source_data/genesis.csv"):
+        sources.append("source_data/genesis.csv")
+    for path in sources:
+        n = 0
+        with open(path) as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                arr = line.split(",")
+                key = addr_to_key(arr[0])
+                if key not in balance_of:
+                    balance_of[key] = int(arr[1])
+                n += 1
+        print("read", path, n, "lines, unique", len(balance_of))
 
     n = 0
-    prev_key = None
-    with open(tmp_sorted) as fin, open(final_path + ".tmp", "wb") as out:
-        for line in fin:
-            arr = line.split(",")
-            key = addr_to_key(arr[0])
-            if prev_key is not None:
-                assert key > prev_key, "snapshot not sorted at " + arr[0]
-            prev_key = key
-            out.write(key + int(arr[1]).to_bytes(BAL_SIZE, "big"))
+    with open(final_path + ".tmp", "wb") as out:
+        for key in sorted(balance_of):
+            out.write(key + balance_of[key].to_bytes(BAL_SIZE, "big"))
             n += 1
     os.replace(final_path + ".tmp", final_path)
 
-    os.remove(tmp_concat)
-    os.remove(tmp_sorted)
     print("snapshot built:", final_path, n, "records")
     return final_path
 
