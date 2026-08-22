@@ -13,3 +13,4 @@ temp_chart_data/
 process/loop.sh*
 process/drawpy/
 AGENTS.md
+debug.log
